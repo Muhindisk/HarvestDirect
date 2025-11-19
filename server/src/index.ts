@@ -16,6 +16,10 @@ import orderRoutes from './routes/order.routes';
 import paymentRoutes from './routes/payment.routes';
 import escrowRoutes from './routes/escrow.routes';
 import cartRoutes from './routes/cart.routes';
+import reviewRoutes from './routes/review.routes';
+import uploadRoutes from './routes/upload.routes';
+import adminRoutes from './routes/admin.routes';
+import walletRoutes from './routes/wallet.routes';
 
 dotenv.config();
 
@@ -109,6 +113,13 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/escrow', escrowRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/wallet', walletRoutes);
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 // 404 Handler
 app.use('*', (req, res) => {

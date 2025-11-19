@@ -7,7 +7,7 @@ export interface IOrder extends Document {
   product: mongoose.Types.ObjectId;
   quantity: number;
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'in-transit' | 'delivered' | 'cancelled';
+  status: 'awaiting-payment' | 'pending' | 'confirmed' | 'in-transit' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'paid' | 'held-in-escrow' | 'released' | 'refunded';
   deliveryAddress: {
     county: string;
@@ -16,6 +16,7 @@ export interface IOrder extends Document {
     phone: string;
   };
   deliveryDate?: Date;
+  paymentDeadline?: Date;
   escrowId?: mongoose.Types.ObjectId;
   notes?: string;
   createdAt: Date;
@@ -56,13 +57,16 @@ const orderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'in-transit', 'delivered', 'cancelled'],
-      default: 'pending',
+      enum: ['awaiting-payment', 'pending', 'confirmed', 'in-transit', 'delivered', 'cancelled'],
+      default: 'awaiting-payment',
     },
     paymentStatus: {
       type: String,
       enum: ['pending', 'paid', 'held-in-escrow', 'released', 'refunded'],
       default: 'pending',
+    },
+    paymentDeadline: {
+      type: Date,
     },
     deliveryAddress: {
       county: {
@@ -91,8 +95,8 @@ const orderSchema = new Schema<IOrder>(
   }
 );
 
-// Generate order number before saving
-orderSchema.pre('save', async function (next) {
+// Generate order number before validation
+orderSchema.pre('validate', function (next) {
   if (!this.orderNumber) {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 7);

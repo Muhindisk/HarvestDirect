@@ -16,6 +16,9 @@ export interface IProduct extends Document {
   harvestDate?: Date;
   organic: boolean;
   certified: boolean;
+  tags?: string[];
+  rating?: number;
+  reviewCount?: number;
   status: 'available' | 'sold' | 'pending';
   views: number;
   createdAt: Date;
@@ -74,6 +77,17 @@ const productSchema = new Schema<IProduct>(
     certified: {
       type: Boolean,
       default: false,
+    },
+    tags: [String],
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
     },
     status: {
       type: String,

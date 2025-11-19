@@ -9,7 +9,19 @@ const router = Router();
 // Get all products with optional filtering and sorting
 router.get('/', async (req, res) => {
   try {
-    const { search, category, sort, limit = '50' } = req.query;
+    const { 
+      search, 
+      category, 
+      sort, 
+      limit = '50', 
+      page = '1',
+      minPrice,
+      maxPrice,
+      county,
+      organic,
+      certified,
+      tags
+    } = req.query;
     
     const query: Record<string, unknown> = { status: 'available' };
     
@@ -25,19 +37,65 @@ router.get('/', async (req, res) => {
     if (category && typeof category === 'string' && category.toLowerCase() !== 'all') {
       query.category = category.toLowerCase();
     }
+
+    // Filter by price range
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) (query.price as any).$gte = parseFloat(minPrice as string);
+      if (maxPrice) (query.price as any).$lte = parseFloat(maxPrice as string);
+    }
+
+    // Filter by location (county)
+    if (county && typeof county === 'string') {
+      query['location.county'] = { $regex: county, $options: 'i' };
+    }
+
+    // Filter by organic status
+    if (organic === 'true') {
+      query.organic = true;
+    }
+
+    // Filter by certified status
+    if (certified === 'true') {
+      query.certified = true;
+    }
+
+    // Filter by tags
+    if (tags && typeof tags === 'string') {
+      const tagArray = tags.split(',').map(t => t.trim());
+      query.tags = { $in: tagArray };
+    }
     
     // Build sort object
     let sortObj: Record<string, 1 | -1> = { createdAt: -1 }; // default: newest first
     if (sort === 'price-asc') sortObj = { price: 1 };
     else if (sort === 'price-desc') sortObj = { price: -1 };
     else if (sort === 'name') sortObj = { name: 1 };
+    else if (sort === 'rating') sortObj = { rating: -1 };
     
-    const products = await Product.find(query)
-      .populate('farmer', 'name location rating')
-      .sort(sortObj)
-      .limit(parseInt(limit as string, 10));
+    // Pagination
+    const limitNum = parseInt(limit as string, 10);
+    const pageNum = parseInt(page as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate('farmer', 'name location rating')
+        .sort(sortObj)
+        .skip(skip)
+        .limit(limitNum),
+      Product.countDocuments(query)
+    ]);
     
-    res.json({ products });
+    res.json({ 
+      products,
+      pagination: {
+        total,
+        page: pageNum,
+        pages: Math.ceil(total / limitNum),
+        limit: limitNum
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch products' });
