@@ -1,7 +1,7 @@
-import dotenv from 'dotenv';
-
-// Load environment variables FIRST before any other imports
-dotenv.config();
+// Load environment variables only in non-Vercel environment
+if (process.env.VERCEL !== '1') {
+  require('dotenv').config();
+}
 
 import express, { Application } from 'express';
 import cors from 'cors';
