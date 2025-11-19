@@ -51,9 +51,31 @@ app.use(helmet({
 
 // CORS Configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [process.env.CLIENT_URL || 'https://harvestdirect.com']
-    : ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:5173'],
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // In production, allow Vercel domains and configured CLIENT_URL
+    if (process.env.NODE_ENV === 'production') {
+      const allowedOrigins: (string | RegExp)[] = [
+        process.env.CLIENT_URL || '',
+        /\.vercel\.app$/,  // Any Vercel deployment
+        /^https:\/\/.*\.vercel\.app$/,
+      ];
+      
+      const isAllowed = allowedOrigins.some(pattern => {
+        if (!pattern) return false;
+        if (typeof pattern === 'string') return pattern === origin;
+        return pattern.test(origin);
+      });
+      
+      callback(null, isAllowed);
+    } else {
+      // In development, allow localhost
+      const allowedOrigins = ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:5173'];
+      callback(null, allowedOrigins.includes(origin));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
