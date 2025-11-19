@@ -1,4 +1,4 @@
-import app from '../src/index';
+const app = require('../src/index').default;
 
-export default app;
+module.exports = app;
 
