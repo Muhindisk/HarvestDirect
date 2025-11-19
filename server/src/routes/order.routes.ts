@@ -8,6 +8,15 @@ import { AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+// Helper to safely extract an id string from an ObjectId, populated doc, or string
+const idToString = (val: any): string => {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (val._id) return (val._id as any).toString();
+  if (typeof val.toString === 'function') return val.toString();
+  return String(val);
+};
+
 // Create an order with transaction
 router.post('/', protect, async (req: AuthRequest, res) => {
   const session = await mongoose.startSession();
@@ -135,11 +144,9 @@ router.get('/:id', protect, async (req: AuthRequest, res) => {
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
     // Check if user is authorized to view this order
-    if (
-      order.buyer.toString() !== userId &&
-      order.farmer.toString() !== userId &&
-      req.user!.role !== 'admin'
-    ) {
+    const buyerIdStr = idToString(order.buyer);
+    const farmerIdStr = idToString(order.farmer);
+    if (buyerIdStr !== userId && farmerIdStr !== userId && req.user!.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to view this order' });
     }
 
@@ -160,7 +167,7 @@ router.put('/:id/status', protect, async (req: AuthRequest, res) => {
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
     // Only farmer or admin can update order status
-    if (order.farmer.toString() !== userId && req.user!.role !== 'admin') {
+    if (idToString(order.farmer) !== userId && req.user!.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to update this order' });
     }
 
@@ -195,7 +202,7 @@ router.post('/:id/cancel', protect, async (req: AuthRequest, res) => {
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
     // Only buyer can cancel order
-    if (order.buyer.toString() !== userId) {
+    if (idToString(order.buyer) !== userId) {
       return res.status(403).json({ message: 'Not authorized to cancel this order' });
     }
 

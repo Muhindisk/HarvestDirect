@@ -386,34 +386,36 @@ const Products = () => {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product, index) => (
                 <Card 
                   key={product._id} 
-                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                  className="overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
                   onClick={() => handleViewProduct(product._id)}
                 >
                   <CardHeader className="p-0">
-                    <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                    <div className="aspect-square overflow-hidden bg-gray-100">
                       {product.images && product.images.length > 0 ? (
                         <img
                           src={product.images[0]}
                           alt={product.name}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                           No image
                         </div>
                       )}
-                      <Badge className={`absolute top-2 right-2 ${currentUser ? 'bg-green-600' : 'bg-primary'}`}>
+                      <Badge className="absolute top-3 right-3 shadow-sm">
                         {product.category}
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-4">
-                    <CardTitle className="mb-2">{product.name}</CardTitle>
-                    <CardDescription className="mb-4 line-clamp-2">
+                  <CardContent className="p-6">
+                    <CardTitle className="mb-2 text-lg">{product.name}</CardTitle>
+                    <CardDescription className="mb-4 line-clamp-2 leading-relaxed">
                       {product.description}
                     </CardDescription>
                     
@@ -431,21 +433,21 @@ const Products = () => {
                       </div>
                     )}
                     
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mt-4">
                       <div>
-                        <span className={`text-2xl font-bold ${currentUser ? 'text-green-600' : 'text-primary'}`}>
+                        <span className="text-2xl font-bold text-primary">
                           ${product.price}
                         </span>
-                        <span className="text-muted-foreground">/{product.unit}</span>
+                        <span className="text-muted-foreground text-sm">/{product.unit}</span>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {product.quantity} {product.unit} available
+                      <div className="text-sm text-muted-foreground font-medium">
+                        {product.quantity} {product.unit} left
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="p-4 pt-0">
+                  <CardFooter className="p-6 pt-0">
                     <Button 
-                      className={`w-full ${currentUser ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                      className="w-full shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddToCart(product._id);

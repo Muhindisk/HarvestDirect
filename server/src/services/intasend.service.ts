@@ -4,6 +4,14 @@ const INTASEND_PUBLISHABLE_KEY = process.env.INTASEND_PUBLISHABLE_KEY || '';
 const INTASEND_SECRET_KEY = process.env.INTASEND_SECRET_KEY || '';
 const IS_TEST_MODE = process.env.INTASEND_TEST_MODE === 'true';
 
+/**
+ * Sanitize phone number to contain only digits
+ * Removes +, spaces, dashes, and parentheses
+ */
+const sanitizePhoneNumber = (phone: string): string => {
+  return phone.replace(/[\+\s\-\(\)]/g, '');
+};
+
 export interface ChargeParams {
   first_name: string;
   last_name: string;
@@ -17,6 +25,10 @@ export interface ChargeParams {
 }
 
 export interface STKPushParams {
+  first_name: string;
+  last_name: string;
+  email: string;
+  host?: string;
   amount: number;
   phone_number: string;
   api_ref?: string;
@@ -36,6 +48,11 @@ class IntaSendService {
   private intasend: any;
 
   constructor() {
+    console.log('Initializing IntaSend with:');
+    console.log('- Publishable Key:', INTASEND_PUBLISHABLE_KEY ? `${INTASEND_PUBLISHABLE_KEY.substring(0, 20)}...` : 'NOT SET');
+    console.log('- Secret Key:', INTASEND_SECRET_KEY ? `${INTASEND_SECRET_KEY.substring(0, 20)}...` : 'NOT SET');
+    console.log('- Test Mode:', IS_TEST_MODE);
+    
     this.intasend = new IntaSend(
       INTASEND_PUBLISHABLE_KEY,
       INTASEND_SECRET_KEY,
@@ -53,7 +70,7 @@ class IntaSendService {
         first_name: params.first_name,
         last_name: params.last_name,
         email: params.email,
-        phone_number: params.phone_number,
+        phone_number: params.phone_number ? sanitizePhoneNumber(params.phone_number) : undefined,
         host: params.host || process.env.CLIENT_URL || 'https://harvestdirect.com',
         amount: params.amount,
         currency: params.currency || 'KES',
@@ -72,15 +89,34 @@ class IntaSendService {
    */
   async initiateMpesaSTKPush(params: STKPushParams) {
     try {
+      // Sanitize phone number to remove +, spaces, dashes, etc.
+      const sanitizedPhone = sanitizePhoneNumber(params.phone_number);
+      
+      console.log('Initiating M-Pesa STK Push with params:', {
+        ...params,
+        phone_number: sanitizedPhone ? `${sanitizedPhone.substring(0, 6)}...` : 'NOT SET'
+      });
+      
       const collection = this.intasend.collection();
       const response = await collection.mpesaStkPush({
+        first_name: params.first_name,
+        last_name: params.last_name,
+        email: params.email,
+        host: params.host || process.env.CLIENT_URL || 'https://harvestdirect.com',
         amount: params.amount,
-        phone_number: params.phone_number,
+        phone_number: sanitizedPhone,
         api_ref: params.api_ref,
-        narrative: params.narrative || 'Payment',
       });
+      
+      console.log('M-Pesa STK Push response:', response);
       return response;
     } catch (error: any) {
+      // Log full error for debugging
+      console.error('M-Pesa STK Push full error:', JSON.stringify(error, null, 2));
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error headers:', error.response?.headers);
+      
       // Parse buffer response if present
       let errorMessage = 'M-Pesa STK Push failed';
       if (error.response?.data) {
@@ -107,6 +143,12 @@ class IntaSendService {
           }
         }
       }
+      
+      // Add HTTP status code to error message
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication failed. Please check your IntaSend API keys.';
+      }
+      
       console.error('M-Pesa STK Push error:', error.message || errorMessage);
       throw new Error(errorMessage);
     }
@@ -136,7 +178,7 @@ class IntaSendService {
         currency: 'KES',
         transactions: [
           {
-            account: params.account,
+            account: sanitizePhoneNumber(params.account),
             account_name: params.account_name,
             amount: params.amount,
             narrative: params.narrative || 'Payout',

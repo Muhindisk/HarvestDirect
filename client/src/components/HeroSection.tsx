@@ -15,7 +15,7 @@ const HeroSection = () => {
           alt="Farmers harvesting fresh produce" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-900/95 via-gray-900/60 to-gray-900/20"></div>
       </div>
       
       {/* Content */}
@@ -26,15 +26,15 @@ const HeroSection = () => {
             <span className="text-secondary block">Direct to You</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-background/90 mb-8 leading-relaxed">
+          <p className="text-xl md:text-2xl text-background/90 mb-12 leading-relaxed">
             HarvestDirect connects farmers directly with buyers, eliminating middlemen 
             and ensuring fair prices for fresh, quality produce.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 mb-12 animate-fade-in">
             <Button 
               size="lg" 
-              className="bg-primary hover:bg-primary-light text-primary-foreground px-8 py-4 text-lg"
+              className="px-8 py-4 text-lg shadow-primary-lg"
               onClick={() => navigate('/products')}
             >
               Start Buying
@@ -43,7 +43,7 @@ const HeroSection = () => {
             <Button 
               variant="outline" 
               size="lg"
-              className="border-background text-background hover:bg-background hover:text-foreground px-8 py-4 text-lg"
+              className="border-2 border-background text-background hover:bg-background hover:text-foreground px-8 py-4 text-lg backdrop-blur-sm"
               onClick={() => navigate('/register?role=farmer')}
             >
               Join as Farmer

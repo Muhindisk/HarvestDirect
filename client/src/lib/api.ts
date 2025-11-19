@@ -19,6 +19,17 @@ interface UpdateProfileData {
   phone?: string;
   address?: string;
   bio?: string;
+  profileImage?: string;
+  location?: {
+    county?: string;
+    subCounty?: string;
+  };
+  mpesaNumber?: string;
+  bankDetails?: {
+    bankName?: string;
+    accountNumber?: string;
+    accountName?: string;
+  };
 }
 
 interface ProductData {
@@ -159,6 +170,8 @@ export const api = {
     getProfile: (id: string) => apiClient.get(`/users/${id}`),
     updateProfile: (id: string, data: UpdateProfileData) => apiClient.put(`/users/${id}`, data),
     deleteAccount: (id: string) => apiClient.delete(`/users/${id}`),
+    getMyProfile: () => apiClient.get('/users/profile'),
+    updateMyProfile: (data: UpdateProfileData) => apiClient.put('/users/profile', data),
   },
   
   // Product endpoints
@@ -179,6 +192,15 @@ export const api = {
     update: (id: string, data: Partial<OrderData>) => apiClient.put(`/orders/${id}`, data),
     cancel: (id: string) => apiClient.post(`/orders/${id}/cancel`),
   },
+
+  // Wallet endpoints
+  wallet: {
+    getBalance: () => apiClient.get('/wallet/balance'),
+    getWallet: () => apiClient.get('/wallet'),
+    getTransactions: (params?: QueryParams) => apiClient.get('/wallet/transactions', { params }),
+    deposit: (data: { amount: number; paymentMethod?: string }) => apiClient.post('/wallet/deposit', data),
+    withdraw: (data: { amount: number; account: string; accountName: string }) => apiClient.post('/wallet/withdraw', data),
+  },
   
   // Payment endpoints
   payments: {
@@ -192,6 +214,16 @@ export const api = {
     getById: (id: string) => apiClient.get(`/escrow/${id}`),
     release: (id: string) => apiClient.post(`/escrow/${id}/release`),
     dispute: (id: string, data: DisputeData) => apiClient.post(`/escrow/${id}/dispute`, data),
+  },
+  
+  // Upload endpoints
+  upload: {
+    profileImage: (formData: FormData) => apiClient.post('/upload/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+    productImages: (formData: FormData) => apiClient.post('/upload/product', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
   },
 };
 

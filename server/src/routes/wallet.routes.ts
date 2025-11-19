@@ -61,11 +61,15 @@ router.post('/deposit', async (req: AuthRequest, res) => {
     let paymentResult;
     
     if (paymentMethod === 'mpesa-stk') {
+      const nameParts = user.name.split(' ');
       paymentResult = await intasendService.initiateMpesaSTKPush({
+        first_name: nameParts[0] || 'Customer',
+        last_name: nameParts[1] || '',
+        email: user.email,
+        host: process.env.CLIENT_URL || 'http://localhost:5173',
         amount,
         phone_number: user.phone,
         api_ref: `WALLET-DEP-${Date.now()}`,
-        narrative: 'Wallet deposit',
       });
     } else {
       const nameParts = user.name.split(' ');

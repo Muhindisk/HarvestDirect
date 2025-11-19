@@ -62,16 +62,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 px-4 py-8">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-background to-secondary-50 px-4 py-8">
+      <Card className="w-full max-w-md shadow-xl animate-scale-in">
+        <CardHeader className="space-y-1 px-6 py-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-green-600 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center shadow-primary">
               <LogIn className="h-6 w-6 text-white" />
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-muted-foreground/80">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>

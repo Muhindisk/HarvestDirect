@@ -2,13 +2,13 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Create uploads directory if it doesn't exist
+// Create uploads directory if it doesn't exist (for product images that still use local storage)
 const uploadDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Configure storage
+// Configure storage for product images (local)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -18,6 +18,9 @@ const storage = multer.diskStorage({
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   },
 });
+
+// Memory storage for profile images (to upload to ImgBB)
+const memoryStorage = multer.memoryStorage();
 
 // File filter
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -29,7 +32,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   }
 };
 
-// Create multer instance
+// Create multer instance for local storage (product images)
 export const upload = multer({
   storage,
   fileFilter,
@@ -38,7 +41,16 @@ export const upload = multer({
   },
 });
 
+// Create multer instance for memory storage (profile images)
+const uploadMemory = multer({
+  storage: memoryStorage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB max file size
+  },
+});
+
 // Middleware to handle multiple image uploads
 export const uploadProductImages = upload.array('images', 5); // Max 5 images
-export const uploadProfileImage = upload.single('profileImage');
+export const uploadProfileImage = uploadMemory.single('image'); // Changed field name to 'image'
 export const uploadReviewImages = upload.array('reviewImages', 3); // Max 3 images for reviews

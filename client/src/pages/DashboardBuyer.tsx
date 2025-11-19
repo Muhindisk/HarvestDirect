@@ -6,8 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Leaf, ShoppingBag, Heart, Clock, Search, LogOut, ShoppingCart, Wallet, ArrowDownToLine, ArrowUpFromLine, History } from 'lucide-react';
+import { Leaf, ShoppingBag, Heart, Clock, Search, LogOut, ShoppingCart, Wallet, ArrowDownToLine, ArrowUpFromLine, History, User, Settings } from 'lucide-react';
 import { apiClient } from '@/lib/api';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 
 interface User {
@@ -15,6 +24,7 @@ interface User {
   name: string;
   email: string;
   role: string;
+  profileImage?: string;
 }
 
 interface Transaction {
@@ -34,6 +44,7 @@ const DashboardBuyer = () => {
   const [user, setUser] = useState<User | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [orderStats, setOrderStats] = useState<any>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showDepositDialog, setShowDepositDialog] = useState(false);
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
@@ -64,6 +75,8 @@ const DashboardBuyer = () => {
     
     // Load wallet balance
     loadWalletBalance();
+    // Load order stats
+    loadOrderStats();
     
     // Listen for cart updates
     window.addEventListener('cart-updated', updateCartCount);
@@ -76,6 +89,15 @@ const DashboardBuyer = () => {
   const updateCartCount = () => {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     setCartCount(cart.length);
+  };
+
+  const loadOrderStats = async () => {
+    try {
+      const res = await apiClient.get('/orders/stats/summary');
+      setOrderStats(res.data.stats || null);
+    } catch (err) {
+      console.error('Failed to load order stats', err);
+    }
   };
 
   const loadWalletBalance = async () => {
@@ -208,26 +230,28 @@ const DashboardBuyer = () => {
     },
     {
       title: 'Active Orders',
-      value: '3',
+      value: orderStats ? (orderStats.pending + orderStats.confirmed + orderStats.inTransit) : '—',
       icon: <ShoppingBag className="h-6 w-6 text-green-600" />,
       description: 'In progress',
+      action: () => navigate('/orders?filter=active'),
     },
     {
       title: 'Pending Deliveries',
-      value: '2',
+      value: orderStats ? orderStats.inTransit : '—',
       icon: <Clock className="h-6 w-6 text-orange-600" />,
       description: 'Awaiting delivery',
+      action: () => navigate('/orders?filter=in-transit'),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-background to-secondary-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
+      <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md shadow-sm border-b">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-green-600 p-2 rounded-lg">
+              <div className="bg-gradient-to-br from-primary to-primary-600 p-2 rounded-lg shadow-sm">
                 <Leaf className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -238,7 +262,7 @@ const DashboardBuyer = () => {
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
-                className="relative flex items-center space-x-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+                className="relative flex items-center space-x-2"
                 onClick={() => navigate('/cart')}
               >
                 <ShoppingCart className="h-4 w-4" />
@@ -249,14 +273,35 @@ const DashboardBuyer = () => {
                   </Badge>
                 )}
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-                className="flex items-center space-x-2"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Logout</span>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="cursor-pointer">
+                    <Avatar>
+                      <AvatarImage src={user.profileImage} alt={user.name} />
+                      <AvatarFallback>
+                        {user.name.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -279,7 +324,7 @@ const DashboardBuyer = () => {
           {stats.map((stat, index) => (
             <Card 
               key={index} 
-              className={stat.action ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}
+              className={stat.action ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all' : 'hover:shadow-md hover:-translate-y-1'}
               onClick={stat.action}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -349,7 +394,7 @@ const DashboardBuyer = () => {
                 <Search className="h-6 w-6" />
                 <span>Browse Products</span>
               </Button>
-              <Button variant="outline" className="h-24 flex flex-col items-center justify-center space-y-2">
+              <Button variant="outline" className="h-24 flex flex-col items-center justify-center space-y-2" onClick={() => navigate('/orders')}>
                 <ShoppingBag className="h-6 w-6" />
                 <span>My Orders</span>
               </Button>

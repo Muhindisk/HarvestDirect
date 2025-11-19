@@ -5,8 +5,18 @@ import intasendService from '../services/intasend.service';
 import walletService from '../services/wallet.service';
 import Order from '../models/Order';
 import Escrow from '../models/Escrow';
+import Wallet from '../models/Wallet';
 
 const router = Router();
+
+// Helper to safely extract an id string from an ObjectId, populated doc, or string
+const idToString = (val: any): string => {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (val._id) return (val._id as any).toString();
+  if (typeof val.toString === 'function') return val.toString();
+  return String(val);
+};
 
 // Initiate payment for an order
 router.post('/initiate', protect, async (req: AuthRequest, res) => {
@@ -22,7 +32,8 @@ router.post('/initiate', protect, async (req: AuthRequest, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    if ((order.buyer as any)._id.toString() !== (req.user!._id as any).toString()) {
+    const userIdStr = (req.user!._id as any).toString();
+    if (idToString(order.buyer) !== userIdStr) {
       return res.status(403).json({ message: 'Not authorized to pay for this order' });
     }
 
@@ -104,11 +115,15 @@ router.post('/initiate', protect, async (req: AuthRequest, res) => {
       });
     } else if (paymentMethod === 'mpesa-stk') {
       // M-Pesa STK Push
+      const nameParts = user.name.split(' ');
       const result = await intasendService.initiateMpesaSTKPush({
+        first_name: nameParts[0] || 'Customer',
+        last_name: nameParts[1] || '',
+        email: user.email,
+        host: process.env.CLIENT_URL || 'http://localhost:5173',
         amount: order.totalAmount,
         phone_number: user.phone,
         api_ref: order.orderNumber,
-        narrative: `Payment for order ${order.orderNumber}`,
       });
 
       res.json({
@@ -304,7 +319,8 @@ router.post('/release-escrow/:orderId', protect, async (req: AuthRequest, res) =
     }
 
     // Only buyer or admin can release escrow
-    if (order.buyer.toString() !== (req.user!._id as any).toString() && req.user!.role !== 'admin') {
+    const userIdStr2 = (req.user!._id as any).toString();
+    if (idToString(order.buyer) !== userIdStr2 && req.user!.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -323,28 +339,65 @@ router.post('/release-escrow/:orderId', protect, async (req: AuthRequest, res) =
 
     const farmer = order.farmer as any;
 
-    // Initiate payout to farmer
-    const payout = await intasendService.initiatePayout({
-      account: farmer.mpesaNumber || farmer.phone,
-      account_name: farmer.name,
-      amount: escrow.amount,
-      narrative: `Payment for order ${order.orderNumber}`,
-      account_type: 'MPESA',
-    });
+    // Credit farmer's internal wallet first (so funds appear in their wallet)
+    try {
+      const farmerWallet = await walletService.getOrCreateWallet(farmer._id);
+      const { transaction: creditTransaction } = await walletService.creditWallet({
+        walletId: farmerWallet._id as any,
+        userId: farmer._id as any,
+        type: 'credit',
+        category: 'payout',
+        amount: escrow.amount,
+        description: `Payment for order ${order.orderNumber}`,
+        metadata: { orderId: order._id, escrowId: escrow._id },
+      });
 
-    // Update escrow status
-    escrow.status = 'released';
-    escrow.releasedAt = new Date();
-    await escrow.save();
+      // Attempt external payout but do not block the wallet credit on failure
+      let payoutResult: any = null;
+      try {
+        payoutResult = await intasendService.initiatePayout({
+          account: farmer.mpesaNumber || farmer.phone,
+          account_name: farmer.name,
+          amount: escrow.amount,
+          narrative: `Payment for order ${order.orderNumber}`,
+          account_type: 'MPESA',
+        });
 
-    order.paymentStatus = 'released';
-    await order.save();
+        // Attach payout metadata to wallet transaction
+        creditTransaction.metadata = {
+          ...creditTransaction.metadata,
+          payoutId: payoutResult.id,
+          payoutData: payoutResult,
+        };
+        await creditTransaction.save();
+      } catch (payoutErr: any) {
+        // Record payout failure metadata on the transaction
+        creditTransaction.metadata = {
+          ...creditTransaction.metadata,
+          payoutError: payoutErr?.message || String(payoutErr),
+        };
+        await creditTransaction.save();
+        console.error('Payout to farmer failed:', payoutErr);
+      }
 
-    res.json({
-      success: true,
-      message: 'Payment released to farmer',
-      payout,
-    });
+      // Update escrow and order status
+      escrow.status = 'released';
+      escrow.releasedAt = new Date();
+      await escrow.save();
+
+      order.paymentStatus = 'released';
+      await order.save();
+
+      res.json({
+        success: true,
+        message: 'Payment released to farmer wallet',
+        payout: payoutResult,
+        creditTransaction,
+      });
+    } catch (err: any) {
+      console.error('Error crediting farmer wallet:', err);
+      return res.status(500).json({ message: 'Failed to credit farmer wallet' });
+    }
   } catch (error: any) {
     console.error('Release escrow error:', error);
     res.status(500).json({ message: error.message });

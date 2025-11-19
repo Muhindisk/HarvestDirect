@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import 'intasend-inlinejs-sdk';
 
 interface CartItem {
   productId: string;
@@ -148,10 +149,55 @@ const Cart = () => {
     }
   };
 
+  // Initialize IntaSend for card payments
+  const initializeIntaSend = () => {
+    if (typeof window !== 'undefined' && (window as any).IntaSend) {
+      new (window as any).IntaSend({
+        publicAPIKey: import.meta.env.VITE_INTASEND_PUBLIC_KEY || "",
+        live: false // Set to true for production
+      })
+      .on("COMPLETE", (response: any) => { 
+        console.log("COMPLETE:", response);
+        // Clear cart after successful payment
+        localStorage.removeItem('cart');
+        window.dispatchEvent(new Event('cart-updated'));
+        setCart([]);
+        
+        toast({ 
+          title: 'Payment successful', 
+          description: 'Your payment has been processed successfully.',
+        });
+        
+        setShowPaymentDialog(false);
+        navigate('/dashboard/buyer');
+      })
+      .on("FAILED", (response: any) => { 
+        console.log("FAILED", response);
+        toast({ 
+          title: 'Payment failed', 
+          description: 'Payment could not be completed. Please try again.', 
+          variant: 'destructive' 
+        });
+      })
+      .on("IN-PROGRESS", () => { 
+        console.log("INPROGRESS ...");
+        toast({ 
+          title: 'Processing payment', 
+          description: 'Please wait while we process your payment.',
+        });
+      });
+    }
+  };
+
   const handlePayment = async () => {
     if (!currentOrderId) {
       toast({ title: 'Error', description: 'No order ID found', variant: 'destructive' });
       return;
+    }
+
+    // Initialize IntaSend for card payments
+    if (paymentMethod === 'card') {
+      initializeIntaSend();
     }
 
     setIsCheckingOut(true);
@@ -384,11 +430,24 @@ const Cart = () => {
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="card" id="card" />
                   <Label htmlFor="card" className="flex-1 cursor-pointer">
-                    Card Payment
+                    Card Payment (IntaSend)
                     <p className="text-sm text-muted-foreground">Pay using Visa, Mastercard, or other cards</p>
                   </Label>
                 </div>
               </RadioGroup>
+
+              {paymentMethod === 'card' && (
+                <div className="p-4 border rounded bg-card">
+                  <p className="text-sm text-muted-foreground mb-3">Click the button below to pay with your card:</p>
+                  <button 
+                    className="intaSendPayButton w-full bg-primary text-primary-foreground hover:bg-primary/90 py-2 px-4 rounded font-medium"
+                    data-amount={orderTotalAmount.toString()}
+                    data-currency="KES"
+                  >
+                    Pay KSh {orderTotalAmount.toFixed(2)} with Card
+                  </button>
+                </div>
+              )}
 
               <div className="bg-muted p-3 rounded">
                 <div className="flex justify-between text-sm mb-2">
