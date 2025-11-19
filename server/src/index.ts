@@ -99,6 +99,12 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
+// Debug middleware - log all incoming requests
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.originalUrl} - ${req.ip}`);
+  next();
+});
+
 // Database connection middleware for serverless
 if (process.env.VERCEL === '1') {
   app.use(async (req, res, next) => {
