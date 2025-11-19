@@ -125,6 +125,30 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'HarvestDirect API - Agricultural Marketplace',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth',
+      users: '/api/users',
+      products: '/api/products',
+      orders: '/api/orders',
+      payments: '/api/payments',
+      escrow: '/api/escrow',
+      cart: '/api/cart',
+      reviews: '/api/reviews',
+      upload: '/api/upload',
+      admin: '/api/admin',
+      wallet: '/api/wallet'
+    },
+    documentation: 'https://github.com/Muhindisk/HarvestDirect'
+  });
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
