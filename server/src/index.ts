@@ -28,8 +28,10 @@ import walletRoutes from './routes/wallet.routes';
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to Database
-connectDB();
+// Connect to Database only if not in serverless environment
+if (process.env.VERCEL !== '1') {
+  connectDB();
+}
 
 // Trust proxy (important for rate limiting behind reverse proxies like Nginx)
 app.set('trust proxy', 1);
@@ -73,6 +75,22 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 } else {
   app.use(morgan('combined'));
+}
+
+// Database connection middleware for serverless
+if (process.env.VERCEL === '1') {
+  app.use(async (req, res, next) => {
+    try {
+      await connectDB();
+      next();
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Database connection failed' 
+      });
+    }
+  });
 }
 
 // Rate limiting for API endpoints
