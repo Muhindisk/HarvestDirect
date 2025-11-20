@@ -193,12 +193,35 @@ app.use('/api/wallet', walletRoutes);
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
+// Favicon handler to reduce noise in logs
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // 404 Handler
 app.use('*', (req, res) => {
+  console.log('⚠️ 404 - Route not found:', {
+    method: req.method,
+    path: req.originalUrl,
+    baseUrl: req.baseUrl,
+    headers: req.headers,
+  });
+  
   res.status(404).json({
     success: false,
     message: 'API endpoint not found',
     path: req.originalUrl,
+    method: req.method,
+    availableEndpoints: {
+      root: '/',
+      health: '/health',
+      auth: '/api/auth/login, /api/auth/register',
+      products: '/api/products',
+      users: '/api/users',
+      cart: '/api/cart',
+      orders: '/api/orders',
+      payments: '/api/payments',
+    }
+  });
+});
   });
 });
 
