@@ -75,9 +75,6 @@ interface QueryParams {
 // API base URL - automatically uses environment variable or defaults
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-console.log('🔗 API Base URL:', API_BASE_URL);
-console.log('📍 Environment:', import.meta.env.MODE);
-
 // Create axios instance with default config
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -116,15 +113,6 @@ apiClient.interceptors.response.use(
       // Server responded with error status
       const { status, data } = error.response;
       
-      console.error('❌ API Error:', {
-        url: error.config?.url,
-        fullURL: `${error.config?.baseURL}${error.config?.url}`,
-        method: error.config?.method?.toUpperCase(),
-        status,
-        message: data?.message || error.message,
-        data
-      });
-      
       switch (status) {
         case 401:
           // Unauthorized - clear token and redirect to login
@@ -140,7 +128,7 @@ apiClient.interceptors.response.use(
           
         case 404:
           // Not found
-          console.error('Resource not found:', error.config?.url);
+          console.error('Resource not found');
           break;
           
         case 429:

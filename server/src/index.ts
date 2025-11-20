@@ -1,7 +1,7 @@
-// Load environment variables only in non-Vercel environment
-if (process.env.VERCEL !== '1') {
-  require('dotenv').config();
-}
+import dotenv from 'dotenv';
+
+// Load environment variables FIRST before any other imports
+dotenv.config();
 
 import express, { Application } from 'express';
 import cors from 'cors';
@@ -28,10 +28,8 @@ import walletRoutes from './routes/wallet.routes';
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to Database only if not in serverless environment
-if (process.env.VERCEL !== '1') {
-  connectDB();
-}
+// Connect to Database
+connectDB();
 
 // Trust proxy (important for rate limiting behind reverse proxies like Nginx)
 app.set('trust proxy', 1);
@@ -51,31 +49,9 @@ app.use(helmet({
 
 // CORS Configuration
 const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // In production, allow Vercel domains and configured CLIENT_URL
-    if (process.env.NODE_ENV === 'production') {
-      const allowedOrigins: (string | RegExp)[] = [
-        process.env.CLIENT_URL || '',
-        /\.vercel\.app$/,  // Any Vercel deployment
-        /^https:\/\/.*\.vercel\.app$/,
-      ];
-      
-      const isAllowed = allowedOrigins.some(pattern => {
-        if (!pattern) return false;
-        if (typeof pattern === 'string') return pattern === origin;
-        return pattern.test(origin);
-      });
-      
-      callback(null, isAllowed);
-    } else {
-      // In development, allow localhost
-      const allowedOrigins = ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:5173'];
-      callback(null, allowedOrigins.includes(origin));
-    }
-  },
+  origin: process.env.NODE_ENV === 'production'
+    ? [process.env.CLIENT_URL || 'https://harvestdirect.com']
+    : ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -97,28 +73,6 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 } else {
   app.use(morgan('combined'));
-}
-
-// Debug middleware - log all incoming requests
-app.use((req, res, next) => {
-  console.log(`📨 ${req.method} ${req.originalUrl} - ${req.ip}`);
-  next();
-});
-
-// Database connection middleware for serverless
-if (process.env.VERCEL === '1') {
-  app.use(async (req, res, next) => {
-    try {
-      await connectDB();
-      next();
-    } catch (error) {
-      console.error('Database connection failed:', error);
-      res.status(500).json({ 
-        success: false, 
-        message: 'Database connection failed' 
-      });
-    }
-  });
 }
 
 // Rate limiting for API endpoints
@@ -153,30 +107,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'HarvestDirect API - Agricultural Marketplace',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      auth: '/api/auth',
-      users: '/api/users',
-      products: '/api/products',
-      orders: '/api/orders',
-      payments: '/api/payments',
-      escrow: '/api/escrow',
-      cart: '/api/cart',
-      reviews: '/api/reviews',
-      upload: '/api/upload',
-      admin: '/api/admin',
-      wallet: '/api/wallet'
-    },
-    documentation: 'https://github.com/Muhindisk/HarvestDirect'
-  });
-});
-
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -193,35 +123,12 @@ app.use('/api/wallet', walletRoutes);
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
 
-// Favicon handler to reduce noise in logs
-app.get('/favicon.ico', (req, res) => res.status(204).end());
-
 // 404 Handler
 app.use('*', (req, res) => {
-  console.log('⚠️ 404 - Route not found:', {
-    method: req.method,
-    path: req.originalUrl,
-    baseUrl: req.baseUrl,
-    headers: req.headers,
-  });
-  
   res.status(404).json({
     success: false,
     message: 'API endpoint not found',
     path: req.originalUrl,
-    method: req.method,
-    availableEndpoints: {
-      root: '/',
-      health: '/health',
-      auth: '/api/auth/login, /api/auth/register',
-      products: '/api/products',
-      users: '/api/users',
-      cart: '/api/cart',
-      orders: '/api/orders',
-      payments: '/api/payments',
-    }
-  });
-});
   });
 });
 
@@ -239,14 +146,11 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-// Only start server if not in serverless environment (Vercel)
-if (process.env.VERCEL !== '1') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`🌾 HarvestDirect API - Agricultural Marketplace`);
-    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'http://localhost:8080'}`);
-  });
-}
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌾 HarvestDirect API - Agricultural Marketplace`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'http://localhost:8080'}`);
+});
 
 export default app;
