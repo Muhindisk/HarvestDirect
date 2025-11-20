@@ -146,11 +146,14 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌾 HarvestDirect API - Agricultural Marketplace`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'http://localhost:8080'}`);
-});
+// Only start server if not in serverless environment
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🌾 HarvestDirect API - Agricultural Marketplace`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 Client URL: ${process.env.CLIENT_URL || 'http://localhost:8080'}`);
+  });
+}
 
 export default app;
