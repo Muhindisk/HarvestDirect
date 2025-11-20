@@ -46,7 +46,10 @@ declare module 'fs' {
 
 declare module 'mongoose' {
   // Minimal mongoose stub: Schema, Types, model, Document
-  export const Schema: any;
+  export class Schema<T = any> {
+    constructor(definition?: any, options?: any);
+    [key: string]: any;
+  }
   export interface Document {
     _id?: any;
     [key: string]: any;
@@ -114,5 +117,6 @@ declare module 'multer' {
     interface File {
       [key: string]: any;
     }
+    type FileFilterCallback = (error: Error | null, acceptFile: boolean) => void;
   }
 }
