@@ -3,8 +3,8 @@ services:
     name: harvestdirect-api
     path: server
     runtime: node
-    # Clean install to force dependencies, then build, then reinstall prod deps
-    buildCommand: rm -rf node_modules && npm install && npm run build && npm install --production=false
+    # Build and postbuild script will reinstall production dependencies
+    buildCommand: npm install && npm run build
     startCommand: npm start
     autoDeploy: true
     envVars:
