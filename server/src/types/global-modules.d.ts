@@ -30,4 +30,3 @@ declare module 'intasend-node' {
   const i: any;
   export = i;
 }
-*** End Patch
