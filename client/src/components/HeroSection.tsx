@@ -43,7 +43,7 @@ const HeroSection = () => {
             <Button 
               variant="outline" 
               size="lg"
-              className="border-2 border-background text-background hover:bg-background hover:text-foreground px-8 py-4 text-lg backdrop-blur-sm"
+              className="border-2 border-background text-background md:hover:bg-background md:hover:text-foreground px-8 py-4 text-lg backdrop-blur-sm"
               onClick={() => navigate('/register?role=farmer')}
             >
               Join as Farmer
