@@ -48,6 +48,11 @@ declare module 'mongoose' {
   // Minimal mongoose stub: Schema, Types, model, Document
   export class Schema<T = any> {
     constructor(definition?: any, options?: any);
+    static Types: {
+      ObjectId: any;
+      Mixed: any;
+      [key: string]: any;
+    };
     [key: string]: any;
   }
   export interface Document {
@@ -111,12 +116,11 @@ declare module 'express-rate-limit' {
 }
 
 declare module 'multer' {
+  interface File {
+    [key: string]: any;
+  }
+  type FileFilterCallback = (error: Error | null, acceptFile: boolean) => void;
+  
   const multer: any;
   export = multer;
-  export namespace multer {
-    interface File {
-      [key: string]: any;
-    }
-    type FileFilterCallback = (error: Error | null, acceptFile: boolean) => void;
-  }
 }

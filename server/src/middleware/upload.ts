@@ -23,12 +23,12 @@ const storage = multer.diskStorage({
 const memoryStorage = multer.memoryStorage();
 
 // File filter
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req: any, file: Express.Multer.File, cb: (error: Error | null, acceptFile: boolean) => void) => {
   // Accept images only
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed!'));
+    cb(new Error('Only image files are allowed!'), false);
   }
 };
 
