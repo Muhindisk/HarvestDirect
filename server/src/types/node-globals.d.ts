@@ -16,7 +16,8 @@ declare namespace NodeJS {
     env: ProcessEnv;
     exit(code?: number): void;
     cwd(): string;
-    // add more if needed
+    uptime(): number;
+    on(event: string, listener: (...args: any[]) => void): this;
   }
 }
 
@@ -25,6 +26,7 @@ declare var process: NodeJS.Process;
 declare function require(name: string): any;
 declare var module: any;
 declare var exports: any;
+declare var __dirname: string;
 
 declare class Buffer {
   static from(data: any, encoding?: string): Buffer;

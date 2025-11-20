@@ -39,9 +39,18 @@ declare module 'path' {
   export = p;
 }
 
+declare module 'fs' {
+  const fs: any;
+  export = fs;
+}
+
 declare module 'mongoose' {
-  // Minimal mongoose stub: Schema, Types, model
+  // Minimal mongoose stub: Schema, Types, model, Document
   export const Schema: any;
+  export interface Document {
+    _id?: any;
+    [key: string]: any;
+  }
   export namespace Types {
     type ObjectId = any;
     const ObjectId: any;
@@ -56,4 +65,54 @@ declare module 'mongoose' {
 declare module 'intasend-node' {
   const i: any;
   export = i;
+}
+
+declare module 'jsonwebtoken' {
+  const jwt: any;
+  export = jwt;
+}
+
+declare module 'bcryptjs' {
+  const bcrypt: any;
+  export default bcrypt;
+}
+
+declare module 'dotenv' {
+  const dotenv: any;
+  export = dotenv;
+}
+
+declare module 'cors' {
+  const cors: any;
+  export = cors;
+}
+
+declare module 'helmet' {
+  const helmet: any;
+  export = helmet;
+}
+
+declare module 'morgan' {
+  const morgan: any;
+  export = morgan;
+}
+
+declare module 'compression' {
+  const compression: any;
+  export = compression;
+}
+
+declare module 'express-rate-limit' {
+  const rateLimit: any;
+  export = rateLimit;
+}
+
+declare module 'multer' {
+  const multer: any;
+  export = multer;
+  export namespace multer {
+    interface File {
+      [key: string]: any;
+    }
+  }
 }

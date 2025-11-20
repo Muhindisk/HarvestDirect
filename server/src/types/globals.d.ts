@@ -18,6 +18,12 @@ declare global {
       body?: any;
       params?: any;
       query?: any;
+      headers?: any;
+    }
+    namespace Multer {
+      interface File {
+        [key: string]: any;
+      }
     }
   }
 
