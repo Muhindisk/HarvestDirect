@@ -72,11 +72,11 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-foreground text-background">
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid lg:grid-cols-5 gap-8">
+    <footer className="bg-foreground text-background w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-16 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand Section */}
-          <div className="lg:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-2">
             <div className="flex items-center space-x-2 mb-6">
               <div className="bg-primary p-2 rounded-lg">
                 <Leaf className="h-6 w-6 text-primary-foreground" />

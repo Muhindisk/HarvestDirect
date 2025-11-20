@@ -19,7 +19,7 @@ const HeroSection = () => {
       </div>
       
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 py-20">
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-20 max-w-7xl mx-auto">
         <div className="max-w-3xl">
           <h1 className="text-5xl md:text-7xl font-bold text-background leading-tight mb-6">
             Farm Fresh,
