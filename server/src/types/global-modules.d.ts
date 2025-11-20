@@ -64,14 +64,19 @@ declare module 'mongoose' {
     const ObjectId: any;
   }
   interface Model<T> {
+    new (doc?: any): T;
     [key: string]: any;
   }
-  function model<T = any>(name: string, schema?: any): Model<T>;
-  export { model };
+  interface Mongoose {
+    model<T = any>(name: string, schema?: any): Model<T>;
+    Schema: typeof Schema;
+    Types: typeof Types;
+    [key: string]: any;
+  }
+  const mongoose: Mongoose;
+  export { mongoose as default };
+  export function model<T = any>(name: string, schema?: any): Model<T>;
   export const Types: any;
-  const m: any;
-  export default m;
-  export as namespace mongoose;
 }
 
 declare module 'intasend-node' {
