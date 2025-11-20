@@ -169,4 +169,19 @@ All colors MUST be HSL.
       transition-duration: 0.01ms !important;
     }
   }
+
+  /* Disable hover effects on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    * {
+      /* Override all hover states on mobile */
+      &:hover {
+        background-color: inherit !important;
+        border-color: inherit !important;
+        color: inherit !important;
+        box-shadow: inherit !important;
+        transform: none !important;
+        opacity: inherit !important;
+      }
+    }
+  }
 }
