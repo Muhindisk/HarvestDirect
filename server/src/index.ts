@@ -28,8 +28,10 @@ import walletRoutes from './routes/wallet.routes';
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to Database
-connectDB();
+// Connect to Database only if not in Vercel (handle per-request in Vercel)
+if (process.env.VERCEL !== '1') {
+  connectDB();
+}
 
 // Trust proxy (important for rate limiting behind reverse proxies like Nginx)
 app.set('trust proxy', 1);
@@ -64,6 +66,22 @@ app.use(cors(corsOptions));
 // Compression middleware (compress responses)
 app.use(compression());
 
+// Connect to database on each request in serverless environment
+if (process.env.VERCEL === '1') {
+  app.use(async (req, res, next) => {
+    try {
+      await connectDB();
+      next();
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Database connection failed' 
+      });
+    }
+  });
+}
+
 // Body parsing middleware with size limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -75,27 +93,29 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('combined'));
 }
 
-// Rate limiting for API endpoints
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Rate limiting for API endpoints (skip in Vercel serverless)
+if (process.env.VERCEL !== '1') {
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
-  message: 'Too many authentication attempts, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 requests per windowMs
+    message: 'Too many authentication attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
-// Apply rate limiting
-app.use('/api/', apiLimiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+  // Apply rate limiting
+  app.use('/api/', apiLimiter);
+  app.use('/api/auth/login', authLimiter);
+  app.use('/api/auth/register', authLimiter);
+}
 
 // Health check (no rate limit)
 app.get('/health', (req, res) => {
