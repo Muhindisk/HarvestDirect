@@ -13,7 +13,6 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "typeRoots": ["./node_modules/@types"],
-    "types": ["node"],
     "ignoreDeprecations": "5.0"
   },
   "ts-node": {
