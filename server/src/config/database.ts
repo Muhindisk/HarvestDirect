@@ -6,11 +6,20 @@ export const connectDB = async (): Promise<void> => {
   // If already connected, reuse the connection
   if (isConnected && mongoose.connection.readyState === 1) {
     console.log('✅ Using existing MongoDB connection');
+    console.log(`📦 Database: ${mongoose.connection.name || 'connected'}`);
     return;
   }
 
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/harvestdirect';
+    const mongoURI = process.env.MONGODB_URI;
+    
+    if (!mongoURI) {
+      throw new Error('MONGODB_URI environment variable is not set');
+    }
+    
+    console.log('🔌 Connecting to MongoDB...');
+    console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
+    console.log('🔑 MongoDB URI configured:', mongoURI.substring(0, 20) + '...');
     
     await mongoose.connect(mongoURI, {
       // Connection pool size
@@ -30,9 +39,10 @@ export const connectDB = async (): Promise<void> => {
     
     isConnected = true;
     console.log('✅ MongoDB Connected Successfully');
-    console.log(`📦 Database: ${mongoose.connection.name}`);
+    console.log(`📦 Database: ${mongoose.connection.name || mongoose.connection.db?.databaseName || 'connected'}`);
   } catch (error) {
     console.error('❌ MongoDB Connection Error:', error);
+    console.error('💡 Make sure MONGODB_URI is set in Vercel environment variables');
     isConnected = false;
     
     // Don't exit process in serverless environment
