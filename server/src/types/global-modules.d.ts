@@ -3,7 +3,10 @@
 
 declare module 'express' {
   const e: any;
-  export = e;
+  function Router(): any;
+  // allow both `import express from 'express'` and `import { Router } from 'express'`
+  export { Router };
+  export default e;
 }
 
 declare module 'axios' {
@@ -23,7 +26,8 @@ declare module 'path' {
 
 declare module 'mongoose' {
   const m: any;
-  export default m;
+  export = m;
+  export as namespace mongoose;
 }
 
 declare module 'intasend-node' {
