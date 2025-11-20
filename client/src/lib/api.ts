@@ -115,10 +115,12 @@ apiClient.interceptors.response.use(
       
       switch (status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+          // Unauthorized - clear token and redirect to login (unless already on login page)
+          if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+          }
           break;
           
         case 403:
