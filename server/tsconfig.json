@@ -12,7 +12,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "types": ["node"],
     "ignoreDeprecations": "5.0"
   },
   "ts-node": {
