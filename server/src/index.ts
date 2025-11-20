@@ -36,18 +36,27 @@ if (process.env.VERCEL !== '1') {
 // Trust proxy (important for rate limiting behind reverse proxies like Nginx)
 app.set('trust proxy', 1);
 
-// Security Middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+// Security Middleware - simplified for serverless
+if (process.env.VERCEL === '1') {
+  // Minimal helmet for serverless
+  app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }));
+} else {
+  // Full helmet for traditional deployment
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false,
-}));
+    crossOriginEmbedderPolicy: false,
+  }));
+}
 
 // CORS Configuration
 const corsOptions = {
@@ -63,8 +72,10 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Compression middleware (compress responses)
-app.use(compression());
+// Compression middleware (skip in Vercel - handled by platform)
+if (process.env.VERCEL !== '1') {
+  app.use(compression());
+}
 
 // Connect to database on each request in serverless environment
 if (process.env.VERCEL === '1') {
@@ -86,11 +97,13 @@ if (process.env.VERCEL === '1') {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Logging middleware
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-} else {
-  app.use(morgan('combined'));
+// Logging middleware (skip in Vercel - use platform logging)
+if (process.env.VERCEL !== '1') {
+  if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+  } else {
+    app.use(morgan('combined'));
+  }
 }
 
 // Rate limiting for API endpoints (skip in Vercel serverless)
@@ -140,8 +153,10 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/wallet', walletRoutes);
 
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files (only in non-serverless - use cloud storage in Vercel)
+if (process.env.VERCEL !== '1') {
+  app.use('/uploads', express.static('uploads'));
+}
 
 // 404 Handler
 app.use('*', (req, res) => {
