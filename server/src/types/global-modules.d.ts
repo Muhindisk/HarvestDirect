@@ -63,7 +63,11 @@ declare module 'mongoose' {
     type ObjectId = any;
     const ObjectId: any;
   }
-  export function model<T = any>(name: string, schema?: any): any;
+  interface Model<T> {
+    [key: string]: any;
+  }
+  function model<T = any>(name: string, schema?: any): Model<T>;
+  export { model };
   export const Types: any;
   const m: any;
   export default m;
