@@ -3,8 +3,23 @@
 
 declare module 'express' {
   const e: any;
-  function Router(): any;
-  // allow both `import express from 'express'` and `import { Router } from 'express'`
+  // Minimal named types used across the codebase
+  export interface Request {
+    user?: any;
+    body?: any;
+    params?: any;
+    query?: any;
+    headers?: any;
+  }
+  export interface Response {
+    status?: any;
+    json?: any;
+    send?: any;
+  }
+  export interface Application { [key: string]: any }
+  export type NextFunction = (err?: any) => void;
+
+  export function Router(): any;
   export { Router };
   export default e;
 }
@@ -25,8 +40,16 @@ declare module 'path' {
 }
 
 declare module 'mongoose' {
+  // Minimal mongoose stub: Schema, Types, model
+  export const Schema: any;
+  export namespace Types {
+    type ObjectId = any;
+    const ObjectId: any;
+  }
+  export function model<T = any>(name: string, schema?: any): any;
+  export const Types: any;
   const m: any;
-  export = m;
+  export default m;
   export as namespace mongoose;
 }
 
