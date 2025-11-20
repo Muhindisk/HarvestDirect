@@ -4,8 +4,8 @@ services:
     path: server
     runtime: node
     # Run install and build explicitly inside the `server` folder so Render's runner executes in the right directory.
-    buildCommand: cd server && npm install --include=dev && npm run build
-    startCommand: cd server && npm start
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
