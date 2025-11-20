@@ -22,8 +22,13 @@ declare namespace NodeJS {
 
 declare var process: NodeJS.Process;
 
+declare function require(name: string): any;
+declare var module: any;
+declare var exports: any;
+
 declare class Buffer {
   static from(data: any, encoding?: string): Buffer;
+  static isBuffer(obj: any): boolean;
   toString(encoding?: string): string;
 }
 
