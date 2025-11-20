@@ -1,7 +1,10 @@
 ﻿import dotenv from 'dotenv';
 
 // Load environment variables FIRST before any other imports
-dotenv.config();
+// Skip in Vercel - environment variables are injected automatically
+if (process.env.VERCEL !== '1') {
+  dotenv.config();
+}
 
 import express, { Application } from 'express';
 import cors from 'cors';
@@ -30,7 +33,9 @@ const PORT = process.env.PORT || 5000;
 
 // Connect to Database only if not in Vercel (handle per-request in Vercel)
 if (process.env.VERCEL !== '1') {
-  connectDB();
+  connectDB().catch(err => {
+    console.error('Initial database connection failed:', err);
+  });
 }
 
 // Trust proxy (important for rate limiting behind reverse proxies like Nginx)
