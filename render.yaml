@@ -3,9 +3,9 @@ services:
     name: harvestdirect-api
     path: server
     runtime: node
-    # Ensure devDependencies (type defs, typescript) are installed during build
-    buildCommand: npm install --include=dev && npm run build
-    startCommand: npm start
+    # Run install and build explicitly inside the `server` folder so Render's runner executes in the right directory.
+    buildCommand: cd server && npm install --include=dev && npm run build
+    startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
         value: production
