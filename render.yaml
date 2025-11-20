@@ -3,8 +3,8 @@ services:
     name: harvestdirect-api
     path: server
     runtime: node
-    # Run install and build explicitly inside the `server` folder so Render's runner executes in the right directory.
-    buildCommand: npm install --include=dev && npm run build
+    # Explicitly install all dependencies (including dev) then build
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
