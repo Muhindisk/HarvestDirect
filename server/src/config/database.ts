@@ -18,7 +18,7 @@ export const connectDB = async (): Promise<void> => {
     }
     
     console.log('🔌 Connecting to MongoDB...');
-    console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
+    console.log('🌍 Environment:', process.env.NODE_ENV || 'production');
     console.log('🔑 MongoDB URI configured:', mongoURI.substring(0, 20) + '...');
     
     await mongoose.connect(mongoURI, {
