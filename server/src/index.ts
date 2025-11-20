@@ -155,16 +155,18 @@ app.use('*', (req, res) => {
 // Error Handler (must be last)
 app.use(errorHandler);
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
+// Graceful shutdown - only in non-serverless environments
+if (process.env.VERCEL !== '1') {
+  process.on('SIGTERM', () => {
+    console.log('👋 SIGTERM received, shutting down gracefully');
+    process.exit(0);
+  });
 
-process.on('SIGINT', () => {
-  console.log('👋 SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
+  process.on('SIGINT', () => {
+    console.log('👋 SIGINT received, shutting down gracefully');
+    process.exit(0);
+  });
+}
 
 // Only start server if not in serverless environment
 if (process.env.VERCEL !== '1') {
