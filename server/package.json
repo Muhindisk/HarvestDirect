@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon src/index.ts",
+    "check-types": "node scripts/check-types.js",
+    "prebuild": "node scripts/check-types.js",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest"
